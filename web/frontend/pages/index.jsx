@@ -14,6 +14,7 @@ import { trophyImage } from "../assets";
 import { ProductsCard } from "../components";
 import { useCallback, useState } from "react";
 import ModalComponent from "../components/Modal";
+import ProductList from "../components/ProductList";
 
 export default function HomePage() {
   const [form, setForm] = useState({
@@ -23,7 +24,7 @@ export default function HomePage() {
   })
   const [product, setProduct] = useState(['all']);
   const [active, setActive] = useState(false);
-  const handleModalChange = useCallback(() => setActive(!active), []);
+  const handleModalChange = useCallback(() => setActive(!active), [active]);
   const handleChoiceListChange = useCallback(
     value => {
       setProduct(value)
@@ -31,15 +32,18 @@ export default function HomePage() {
     [],
   );
 
-  const handleTextFieldChange =useCallback(()=>{setActive(true)},[])
+  const handleTextFieldChange = useCallback(()=>{setActive(true)},[])
   const renderChildren = useCallback(
     (isSelected) =>
       isSelected && (
+        <>
         <TextField
           placeholder="Search product"
           onFocus={handleTextFieldChange}
           autoComplete="off"
         />
+        <ProductList />
+        </>
       ),
     [],
   );
@@ -90,6 +94,7 @@ export default function HomePage() {
                 selected={product}
                 onChange={handleChoiceListChange}
               />
+          
           </LegacyCard  >
         </Layout.Section>
         <Layout.Section secondary>
@@ -97,7 +102,7 @@ export default function HomePage() {
             <p>Add tags to your order.</p>
           </LegacyCard>
         </Layout.Section>
-        <ModalComponent active={active} activetor={renderChildren} handleModalChange={handleModalChange}/>
+                {active &&         <ModalComponent active={active}  handleModalChange={handleModalChange}/>}
       </Layout>
     </Page>
   );
