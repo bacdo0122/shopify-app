@@ -43,24 +43,24 @@ app.get("/api/products/count", async (_req, res) => {
   res.status(200).send(countData);
 });
 
-app.get("/api/products", async (_req, res) => {
+app.get("/api/products", async (_req, res) => {     
  try {
    const client = new shopify.api.clients.Graphql({session:res.locals.shopify.session})
    let data;
- if(_req.query.name){
-  data = await client.query({
-   data: `query {
+ if(_req.query.name && _req.query){      
+  data = await client.query({ 
+   data: `query { 
      products(first: 15, query: "title:*${_req.query.name}*") {
        edges {
          node {
            id
            title
-           handle
+           handle 
            images(first: 1) {
             edges {
               node {
                 id
-                src
+                src  
               }
             }
           }
@@ -69,6 +69,29 @@ app.get("/api/products", async (_req, res) => {
      }
    }`,
  });
+ }
+ else if(_req.query.ids){
+  const ids = JSON.parse(_req.query.ids.toString()).map(item => `"` + item + `"`)
+    data = await client.query({ 
+    data: `query { 
+      nodes(ids:${_req.query.ids}) {   
+        ... on Product {
+          id
+          title
+          handle 
+          images(first: 1) {
+           edges {
+             node {
+               id
+               src
+             }
+           }  
+         }
+        }
+      } 
+    }`,  
+  });  
+  res.status(200).send(data)
  }
  else{
   data = await client.query({
@@ -80,36 +103,154 @@ app.get("/api/products", async (_req, res) => {
            title
            handle
            images(first: 1) {
-            edges {
-              node {
-                id
-                src
+             edges {
+               node {
+                 id
+                 src
+                }
               }
             }
           }
-         }
-       }
+        }
      }
    }`,
- });
- }
-  res.status(200).send(data)
- } catch (error) {
+  });
+}
+
+res.status(200).send(data)
+} catch (error) {
   res.status(500).send(error)
- }
+}
+})
+//
+app.get("/api/collections", async(_req,res)=>{
+  try {
+    const client = new shopify.api.clients.Graphql({session:res.locals.shopify.session})
+    let data;
+    if(_req.query.name && _req.query){
+      data = await client.query({ 
+        data: `query { 
+          collections(first: 15, query: "title:*${_req.query.name}*") {
+            edges {
+              node {
+                id
+                title
+                handle 
+                description
+                image {
+                  id
+                  src
+                 }
+                updatedAt
+              }
+            }
+          }
+        }`,
+      });
+    }
+    else{
+      data = await client.query({ 
+        data: `query { 
+          collections(first: 15) {
+            edges {
+              node {
+                id
+                title
+                handle 
+                description
+                image {
+                  id
+                    src
+                 }
+                updatedAt
+              }
+            }
+          }
+        }`,
+      });
+    }
+    res.status(200).send(data)
+  } catch (error) {
+    res.status(500).send(error)
+  }
 })
 
+//tags
+app.get("/api/collections", async(_req,res)=>{
+  try {
+    const client = new shopify.api.clients.Graphql({session:res.locals.shopify.session})
+    let data;
+    if(_req.query.name && _req.query){
+      data = await client.query({ 
+        data: `query { 
+          productTags(first: 15, query: "title:*${_req.query.name}*") {
+            edges {
+              node {
+                id
+              }
+            }
+          }
+        }`,
+      });
+    }
+    else{
+      data = await client.query({ 
+        data: `query { 
+          productTags(first: 15) {
+            edges {
+              node {
+                id
+               
+              }
+            }
+          }
+        }`,
+      });
+    }
+    res.status(200).send(data)
+  } catch (error) {
+    res.status(500).send(error)
+  }
+})
+
+
 //
-app.get('/api/product/:id', async (_req, res) =>{
+
+
+// app.get("/api/products/", async (_req, res) =>{
+//   // const getIDs = JSON.parse(_req.params.ids).map(item =>  `gid://shopify/Product/${item}`)
+
+//   try {
+//     const client = new shopify.api.clients.Graphql({session:res.locals.shopify.session})
+//     const  data = await client.query({ 
+//       data: `query { 
+//         nodes(ids:${getIDs}) {   
+//           ... on Product {
+//             id,
+//             title
+//           }
+//         } 
+//       }`,  
+//     });  
+//     res.status(200).send(data)
+//   } catch (error) {
+//     res.status(500).send(error)
+//   }
+// })
+//
+
+//
+app.get('/api/productsById', async (_req, res) =>{
+  console.log("query:", _req.query.ids)
   try {
     const client = new shopify.api.clients.Graphql({session:res.locals.shopify.session})
     const  data = await client.query({
       data: `query {
-        products(id:${_req.params.id}) {
+        product(id: "gid://shopify/Product/8221646029090") {
           id
           title
           handle
-          images(first: 1) {
+          images(first: 10) { 
            edges {
              node {
                id
@@ -125,6 +266,7 @@ app.get('/api/product/:id', async (_req, res) =>{
     res.status(500).send(error)
   }
 })
+//
 //
 
 app.get("/api/products/create", async (_req, res) => {

@@ -12,26 +12,28 @@ export default function ModalComponent({ active, handleModalChange }) {
   const handleClose = () => {
     handleModalChange();
   };
+  
   const fetch = useAuthenticatedFetch()
-
   const fetchProducts = async (value) => {
     try {
       let json;
       if (value !== "" && value !== undefined) {
+        console.log("a") 
         const res = await fetch(`/api/products?name=${value}`)
         json = await res.json()
+  
       }
       else {
+        console.log("b") 
         const res = await fetch(`/api/products`)
         json = await res.json()
-        console.log(json)
       }
       setData(json.body.data.products.edges)
     } catch (error) {
       console.log(error)
     }
   }
-  const debounceDropDown = useCallback(debounce((nextValue) => fetchProducts(nextValue), 500), [])
+  const debounceDropDown = useCallback(debounce((nextValue) => fetchProducts(nextValue), 1000), [])
   useMemo(() => {
     debounceDropDown(queryValue)
   }, [queryValue])
@@ -55,7 +57,6 @@ export default function ModalComponent({ active, handleModalChange }) {
   );
 
   const handleSaveProduct = useCallback(()=>{
-    console.log("data:", selectedItems)
     dispatch(setProducts(selectedItems))
     handleModalChange();
   },[selectedItems])

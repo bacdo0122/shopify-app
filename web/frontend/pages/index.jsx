@@ -15,6 +15,8 @@ import { ProductsCard } from "../components";
 import { useCallback, useState } from "react";
 import ModalComponent from "../components/Modal";
 import ProductList from "../components/ProductList";
+import CollectionsProduct from "../components/CollectionProduct";
+import UseFetchCollection from "../hooks/useFetchCollection";
 
 export default function HomePage() {
   const [form, setForm] = useState({
@@ -22,31 +24,62 @@ export default function HomePage() {
     priority: 0,
     status: "enable"
   })
+
   const [product, setProduct] = useState(['all']);
-  const [active, setActive] = useState(false);
-  const handleModalChange = useCallback(() => setActive(!active), [active]);
+  const [active, setActive] = useState(true); 
+  const handleModalChange = useCallback(() => setActive(!active), [active]); 
   const handleChoiceListChange = useCallback(
     value => {
       setProduct(value)
     },
-    [],
+    [], 
   );
 
   const handleTextFieldChange = useCallback(()=>{setActive(true)},[])
+
   const renderChildren = useCallback(
     (isSelected) =>
       isSelected && (
         <>
-        <TextField
-          placeholder="Search product"
-          onFocus={handleTextFieldChange}
-          autoComplete="off"
-        />
-        <ProductList />
+       { product[0] === 'specific' && <>
+          <TextField
+              placeholder="Search product"
+              onFocus={handleTextFieldChange} 
+              autoComplete="off"
+            />
+          <ProductList type="products" data={[]}/>
+       </>
+       }
+       { product[0] === 'collection' && 
+          <>
+          <CollectionsProduct />
+          </>
+       }
+       { product[0] === 'tags' && 
+          <>
+          <CollectionsProduct />
+          </>
+       }
+
         </>
       ),
-    [],
+    [product],
   );
+
+  // const renderChildrenCollection = useCallback(
+  //   (isSelected) =>
+  //     isSelected && (
+  //       <>
+  //       <TextField
+  //         placeholder="Search collection"
+  //         onFocus={ handleTextFieldChange("collection")}
+  //         autoComplete="off"
+  //       />
+  //       <ProductList />
+  //       </>
+  //     ),
+  //   [],
+  // );
 
   return (
     <Page fullWidth>
@@ -84,14 +117,13 @@ export default function HomePage() {
           </LegacyCard  >
           <LegacyCard  title="Apply to Products" sectioned>
               <ChoiceList
-                title="Company name"
                 choices={[
                   {label: 'All products', value: 'all'},
                   {label: 'Specific products', value: 'specific', renderChildren},
-                  {label: 'Product Collections', value: 'collection'},
+                  {label: 'Product Collections', value: 'collection', renderChildren},
                   {label: 'Product Tags', value: 'tag'},
                 ]}
-                selected={product}
+                selected={product}  
                 onChange={handleChoiceListChange}
               />
           
@@ -102,7 +134,9 @@ export default function HomePage() {
             <p>Add tags to your order.</p>
           </LegacyCard>
         </Layout.Section>
-                {active &&         <ModalComponent active={active}  handleModalChange={handleModalChange}/>}
+                {(active && product[0] == 'specific') && <ModalComponent active={active}  handleModalChange={handleModalChange}/>}
+             
+
       </Layout>
     </Page>
   );
