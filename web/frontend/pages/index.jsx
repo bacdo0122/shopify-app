@@ -6,17 +6,23 @@ import {
   TextField,
   Select,
   ChoiceList,
+  AlphaCard,
+  Text,
+  Button,
+  InlineError,
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
 
 import { trophyImage } from "../assets";
-
+import '../css/table.css'
 import { ProductsCard } from "../components";
 import { useCallback, useState } from "react";
 import ModalComponent from "../components/Modal";
 import ProductList from "../components/ProductList";
 import CollectionsProduct from "../components/CollectionProduct";
 import UseFetchCollection from "../hooks/useFetchCollection";
+import { useSelector } from "react-redux";
+import TagsProduct from "../components/TagProduct";
 
 export default function HomePage() {
   const [form, setForm] = useState({
@@ -26,15 +32,23 @@ export default function HomePage() {
   })
 
   const [product, setProduct] = useState(['all']);
-  const [active, setActive] = useState(true); 
+  const [price, setPrice] = useState(['all']);
+  const [active, setActive] = useState(false); 
+  const [amount, setAmount] = useState(0)
   const handleModalChange = useCallback(() => setActive(!active), [active]); 
-  const handleChoiceListChange = useCallback(
+  const handleChoiceListProductChange = useCallback(
     value => {
       setProduct(value)
     },
     [], 
   );
-
+  const handleChoiceListPriceChange = useCallback(
+    value => {
+      setPrice(value)
+    },
+    [], 
+  );
+  
   const handleTextFieldChange = useCallback(()=>{setActive(true)},[])
 
   const renderChildren = useCallback(
@@ -55,9 +69,9 @@ export default function HomePage() {
           <CollectionsProduct />
           </>
        }
-       { product[0] === 'tags' && 
+       { product[0] === 'tag' && 
           <>
-          <CollectionsProduct />
+          <TagsProduct />
           </>
        }
 
@@ -65,21 +79,17 @@ export default function HomePage() {
       ),
     [product],
   );
+  
 
-  // const renderChildrenCollection = useCallback(
-  //   (isSelected) =>
-  //     isSelected && (
-  //       <>
-  //       <TextField
-  //         placeholder="Search collection"
-  //         onFocus={ handleTextFieldChange("collection")}
-  //         autoComplete="off"
-  //       />
-  //       <ProductList />
-  //       </>
-  //     ),
-  //   [],
-  // );
+  const textFieldID = 'ruleContent';
+  const isInvalidName = isValueInvalid("name",form.name);
+  const isInvalidPriority = isValueInvalid("priority",form.priority);
+  const errorMessageName = isInvalidName
+  ? 'Enter 1 or more characters for name'
+  : '';
+  const errorMessagePriority = isInvalidPriority
+  ? 'Please enter an integer from 0 to 99. 0 is the highest priority'
+  : '';
 
   return (
     <Page fullWidth>
@@ -88,13 +98,19 @@ export default function HomePage() {
           <LegacyCard  title="General Information" sectioned>
             <FormLayout>
              <TextField label="Name"
+             error={isInvalidName}
               onChange={(value) => {
                 setForm({...form, name: value })
               }} 
               autoComplete="off" value={form.name} />
+              <InlineError message={errorMessageName} fieldID={textFieldID} />
               <TextField
                 label="Priority"
                 type="number"
+                min={0}
+                error={isInvalidPriority}
+
+                max={99}
                 autoComplete="off"
                 onChange={(value) => {
                   setForm({...form, priority: value })
@@ -102,6 +118,7 @@ export default function HomePage() {
                 value={form.priority}
                 helpText="Please enter an integer from 0 to 99. 0 is the highest priority"
               />
+                <InlineError message={errorMessagePriority} fieldID={textFieldID} />
               <Select label="Status" 
                 options={[
                   {label: 'Enable', value: 'enable'},
@@ -121,23 +138,71 @@ export default function HomePage() {
                   {label: 'All products', value: 'all'},
                   {label: 'Specific products', value: 'specific', renderChildren},
                   {label: 'Product Collections', value: 'collection', renderChildren},
-                  {label: 'Product Tags', value: 'tag'},
+                  {label: 'Product Tags', value: 'tag', renderChildren},
                 ]}
                 selected={product}  
-                onChange={handleChoiceListChange}
+                onChange={handleChoiceListProductChange}
               />
           
           </LegacyCard  >
+          <LegacyCard  title="Custom Prices" sectioned>
+              <ChoiceList
+                choices={[
+                  {label: 'Apply a price to selected prodducts', value: 'all'},
+                  {label: 'Descrease a fixed amount of the original prices of selected products', value: 'fixed'},
+                  {label: 'Descrease  the original prices of selected products by a percentage (%)', value: 'percent'},
+                ]}
+                selected={price}  
+                onChange={handleChoiceListPriceChange}
+              />
+            <TextField
+                label="Amount"
+                type="number"
+                autoComplete="off"
+                value={amount}
+                onChange={(value) => setAmount(value)}
+              />
+              <div  style={{
+                    margin: 'var(--p-space-2) 0',
+                  }}>
+              <Button primary>Save</Button>
+                
+              </div>
+          </LegacyCard  >
         </Layout.Section>
-        <Layout.Section secondary>
-           <LegacyCard title="Tags" sectioned>
-            <p>Add tags to your order.</p>
-          </LegacyCard>
-        </Layout.Section>
-                {(active && product[0] == 'specific') && <ModalComponent active={active}  handleModalChange={handleModalChange}/>}
-             
+        <Layout.Section oneThird>
 
-      </Layout>
+              <div className="table__title"  >
+                <Text as="h2" variant="bodyMd">
+                  Show product pricing details
+                </Text>
+              </div>
+              <table id="table" >
+                <tr>
+                  <th>Title</th>
+                  <th>Final Price</th>
+                </tr>
+                <tr>
+                  <td>Title</td>
+                  <td>Final Price</td>
+                </tr>
+                <tr>
+                  <td>Title</td>
+                  <td>Final Price</td>
+                </tr>
+              </table>
+        </Layout.Section>
+                {(active && product[0] === 'specific') && <ModalComponent active={active}  handleModalChange={handleModalChange}/>}
+        </Layout>
     </Page>
   );
+}
+
+const isValueInvalid = (type, value) => {
+  if(type === "name"){
+    if(value.length <= 0) return true
+  }
+  else{
+    if(Number(value) < 0 || Number(value) > 99) return true
+  }
 }

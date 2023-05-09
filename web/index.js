@@ -160,7 +160,7 @@ app.get("/api/collections", async(_req,res)=>{
                 description
                 image {
                   id
-                    src
+                    url
                  }
                 updatedAt
               }
@@ -176,35 +176,40 @@ app.get("/api/collections", async(_req,res)=>{
 })
 
 //tags
-app.get("/api/collections", async(_req,res)=>{
+app.get("/api/tags", async(_req,res)=>{
   try {
     const client = new shopify.api.clients.Graphql({session:res.locals.shopify.session})
     let data;
     if(_req.query.name && _req.query){
       data = await client.query({ 
-        data: `query { 
-          productTags(first: 15, query: "title:*${_req.query.name}*") {
-            edges {
-              node {
-                id
+        data: `
+        query{
+          shop{
+            productTags(first: 20){
+              edges{
+                cursor
+                node
               }
             }
           }
-        }`,
+        }
+        `,
       });
     }
     else{
       data = await client.query({ 
-        data: `query { 
-          productTags(first: 15) {
-            edges {
-              node {
-                id
-               
+        data: `
+        query{
+          shop{
+            productTags(first: 20){
+              edges{
+                cursor
+                node
               }
             }
           }
-        }`,
+        }
+        `,
       });
     }
     res.status(200).send(data)

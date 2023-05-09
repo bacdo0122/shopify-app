@@ -1,45 +1,62 @@
-import { Button, Modal, LegacyStack, ChoiceList, LegacyCard, ResourceList, LegacyFilters, Text, Avatar, Filters, TextField, ResourceItem, Thumbnail } from '@shopify/polaris';
+import { Button, Modal, LegacyStack, ChoiceList, LegacyCard, ResourceList, LegacyFilters, Text, Avatar, Filters, TextField, ResourceItem, Thumbnail, Icon } from '@shopify/polaris';
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useAuthenticatedFetch } from '../hooks/index';
-import { debounce } from 'lodash'
+import { CancelMajor } from '@shopify/polaris-icons'
 import { useSelector } from 'react-redux';
 export default function ProductList({ type, data = [] }) {
-  const products = useSelector((state) => state.products.products)
+  const productsSelected = useSelector((state) => state.products.selected)
   const [productList, setProductList] = useState(data)
-  //
-  const fetch = useAuthenticatedFetch()
-  useMemo(() => { setProductList(data) }, [data])
+
+
+  useMemo(() => { 
+    if(type === "collections") {
+    setProductList(data)
+  } 
+}, [data])
   
   useMemo(async () => {
     try {
-      if (products.length > 0 && type === "products") {
-
-        if (type === "products") {
-          const data = await fetch(`/api/products?ids=[${products}]`);
-          const json = await data.json();
-          setProductList(json.body.data.nodes)
+        if(type === "products"){
+          setProductList(productsSelected)
         }
-      }
     } catch (error) {
       console.log(error)
     }
-  }, [products])
+  }, [productsSelected])
 
+  const handleSaveProduct = useCallback(()=>{
+    console.log("a")
+  },[])
   return (
 
     <LegacyCard>
       <ResourceList
         resourceName={{ singular: "customer", plural: "customers" }}
         items={productList && productList}
+
         renderItem={(item) => {
           const { id, images, title, image } = item;
-          const media = <Thumbnail size="medium" alt={title} source={images ? images.edges[0].node.src : (image || "https://burst.shopifycdn.com/photos/black-leather-choker-necklace_373x@2x.jpg")} />;
-
+          const media = <Thumbnail size="medium" alt={title} source={images ? images.edges[0].node.src : ((image && image.url) || "https://burst.shopifycdn.com/photos/black-leather-choker-necklace_373x@2x.jpg")} />;
+          const shortcutActions = title
+          ? [
+              {
+                content: 
+                    <Icon
+                    source={CancelMajor}
+                    color="base"
+                  />,
+                url: title,
+                onActiononMouseEnter: handleSaveProduct
+              },
+            ]
+          : undefined;
           return (
             <ResourceList.Item
               id={id}
               url={images ? images.edges[0].node.src : image}
               media={media}
+              shortcutActions={shortcutActions}
+              persistActions
               accessibilityLabel={`View details for ${title}`}
             >
               <Text as="h3" variant="bodyMd" fontWeight="bold">

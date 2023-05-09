@@ -6,34 +6,35 @@ import {
     TextContainer,
     LegacyStack,
     AutoSelection,
-    VerticalStack
+    VerticalStack,
+    TextField,
+    LegacyCard,
+    Box
   } from "@shopify/polaris";
   import { SearchMinor } from "@shopify/polaris-icons";
   import { useState, useCallback, useMemo, useEffect } from "react";
 import { useAuthenticatedFetch } from "../hooks";
 import { useDispatch, useSelector } from "react-redux";
 import ProductList from "./ProductList";
+import {CirclePlusMinor} from '@shopify/polaris-icons';
 import { setCollectionSelected } from "../reducers/collection";
   
-  function CollectionsProduct() {
-    const collections = useSelector(state => state.collections.collections)
-    const collectionsSelected = useSelector(state => state.collections.selected)
-
+  function TagsProduct() {
+    const tags = useSelector(state => state.tags.tags)
     const dispatch = useDispatch();
     const deselectedOptions = useMemo(
-      () => collections && collections.map(item => ({id:item.node.id, title: item.node.title, image:item.node.image})),
+      () => tags && tags.map(item => ({title:item.node})),
        [] 
     );
           
-      const [selectedOptions, setSelectedOptions] = useState(collectionsSelected.length === 0 ? [] : collectionsSelected);
+      const [selectedOptions, setSelectedOptions] = useState([]);
       const [inputValue, setInputValue] = useState("");
       const [options, setOptions] = useState(deselectedOptions);
 
       
     const updateText = useCallback(
-      (value) => {
+      (value, add=false) => {
         setInputValue(value);
-        
         if (value === "") {
           setOptions(deselectedOptions);
           return;
@@ -42,8 +43,15 @@ import { setCollectionSelected } from "../reducers/collection";
         const filterRegex = new RegExp(value, "i");
         const resultOptions = deselectedOptions.filter((option) =>
           option.title.match(filterRegex)
-        );
-        setOptions(resultOptions);
+          );
+         
+         if(add){
+          setOptions([...deselectedOptions, {title: value}]);
+         }
+         else{
+          setOptions(resultOptions);
+         }
+
       },
       [deselectedOptions]
     );
@@ -52,30 +60,33 @@ import { setCollectionSelected } from "../reducers/collection";
       (selected) => {
         const check = selectedOptions.find(item => item.title === selected);
         if (check) {
-          dispatch(setCollectionSelected(selectedOptions.filter((option) => option.title !== selected)))
           setSelectedOptions(
             selectedOptions.filter((option) => option.title !== selected)
           );
+          updateText("");
         } else {
             const data = deselectedOptions.find(item => item.title === selected)
-          setSelectedOptions([...selectedOptions, data]);
-          dispatch(setCollectionSelected([...selectedOptions, data]))
+            if(data){
+              setSelectedOptions([...selectedOptions, data]);
+              updateText("");
+            }
+            else{
+              setSelectedOptions([...selectedOptions, {title: selected}]);
+              updateText(selected, true);
+            }
         }
-        updateText("");
+
       },
       [selectedOptions, updateText]
     );
   
-    // const removeTag = useCallback(
-    //   (tag) => () => {
-    //     const options = [...selectedOptions];
-    //     options.splice(options.indexOf(tag), 1);
-    //     setSelectedOptions(options);
-    //   },
-    //   [selectedOptions]
-    // );
-  
+      const handleActiveOptionChange = useCallback((activeOption)=>{
+        console.log(activeOption)
+      },[])
 
+      const actionMarkup = (inputValue && !options.find(item => item.title === inputValue)) ? <Listbox.Action  value={inputValue} icon={CirclePlusMinor}>
+      {`Add ${inputValue}`}
+     </Listbox.Action> : null;
   
     const optionsMarkup =
       options.length > 0
@@ -102,27 +113,34 @@ import { setCollectionSelected } from "../reducers/collection";
           activator={
             <Combobox.TextField
               onChange={updateText}
-              label="Search collection"
+              label="Search Tags"
               labelHidden
               value={inputValue}
-              placeholder="Search collection"
+              placeholder="Search Tags"
               autoComplete="off"
             />
           }
         >
-          {optionsMarkup ? (
-            <Listbox
-              autoSelection={AutoSelection.None}
-              onSelect={updateSelection}
-            >
-              {optionsMarkup}
-            </Listbox>
-          ) : null}
+          <LegacyCard>
+                    {(optionsMarkup || actionMarkup) ? (
+                      <>
+                      <Listbox
+                        autoSelection={AutoSelection.None}
+                        onSelect={updateSelection}
+                        onActiveOptionChange={handleActiveOptionChange}
+                      >
+                        {actionMarkup}
+                        <Box role="combobox" padding={"2"} borderBlockEndWidth="1" borderColor="border">Suggest TAGS</Box>
+                        {optionsMarkup}
+                      </Listbox>
+                      </>
+                    ) : null}
+                </LegacyCard>
         </Combobox>
-        <ProductList type="collections" data={selectedOptions}/>
+        {/* <ProductList type="collections" data={selectedOptions}/> */}
         </>
     );
   }
   
-  export default CollectionsProduct;
+  export default TagsProduct;
   

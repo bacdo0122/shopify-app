@@ -2,8 +2,8 @@ import { Button, Modal, LegacyStack, ChoiceList, LegacyCard, ResourceList, Legac
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useAuthenticatedFetch } from '../hooks/index';
 import { debounce } from 'lodash'
-import {useDispatch} from 'react-redux'
-import { setProducts } from '../reducers/product';
+import {useDispatch, useSelector} from 'react-redux'
+import { setProductSelected, setProducts } from '../reducers/product';
 export default function ModalComponent({ active, handleModalChange }) {
   const [queryValue, setQueryValue] = useState('');
   const [selectedItems, setSelectedItems] = useState([]);
@@ -12,28 +12,25 @@ export default function ModalComponent({ active, handleModalChange }) {
   const handleClose = () => {
     handleModalChange();
   };
-  
+  const products = useSelector((state) => state.products.products)
   const fetch = useAuthenticatedFetch()
   const fetchProducts = async (value) => {
     try {
       let json;
       if (value !== "" && value !== undefined) {
-        console.log("a") 
         const res = await fetch(`/api/products?name=${value}`)
         json = await res.json()
-  
+        console.log(json.body.data.products.edges)
+        setData(json.body.data.products.edges)
       }
       else {
-        console.log("b") 
-        const res = await fetch(`/api/products`)
-        json = await res.json()
+        setData(products)
       }
-      setData(json.body.data.products.edges)
     } catch (error) {
       console.log(error)
     }
   }
-  const debounceDropDown = useCallback(debounce((nextValue) => fetchProducts(nextValue), 1000), [])
+  const debounceDropDown = useCallback(debounce((nextValue) => fetchProducts(nextValue), 500), [])
   useMemo(() => {
     debounceDropDown(queryValue)
   }, [queryValue])
@@ -57,7 +54,7 @@ export default function ModalComponent({ active, handleModalChange }) {
   );
 
   const handleSaveProduct = useCallback(()=>{
-    dispatch(setProducts(selectedItems))
+    dispatch(setProductSelected(selectedItems))
     handleModalChange();
   },[selectedItems])
   //
@@ -92,10 +89,11 @@ export default function ModalComponent({ active, handleModalChange }) {
                   onClearAll={handleQueryValueRemove}
                 />
               }
-              items={data && data}
+              items={data && data.map(item => ({id: item.node.id, images: item.node.images, title: item.node.title}))}
               renderItem={(item) => {
               
-                const { id, images, title } = item.node;
+                const { id, images, title } = item;
+                // console.log(id)
                 const media = <Thumbnail size="medium" alt={title} source={images.edges[0].node.src} />;
 
                 return (

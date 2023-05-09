@@ -1,0 +1,33 @@
+.table__title{
+    background-image: linear-gradient(to right, #2500C6, #A600B6);
+    padding: 10px;
+    color: #fff;
+    border-radius: 6px;
+    text-align: center
+}
+#table{
+    width: 100%;
+    margin-top: 5px;
+}
+#table tr th, #table tr td{
+    width: 50%;
+    text-align: center;
+    border-bottom: 1px solid #ccc;
+}
+#table tr td{
+    padding: 15px;
+    
+}
+#table tr td:nth-child(1){
+    border-right: 1px solid #ccc;
+}
+#table tr th{
+    border: .5px solid #ccc;
+    color: #fff;
+}
+#table tr th:nth-child(1){
+    background-color: #5B00BF;
+}
+#table tr th:nth-child(2){
+    background-color: #B100B5;
+}
