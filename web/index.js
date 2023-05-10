@@ -102,7 +102,7 @@ app.get("/api/products", async (_req, res) => {
                 handle
                 title
               }
-            }
+            } 
           }
            priceRange {
             maxVariantPrice {

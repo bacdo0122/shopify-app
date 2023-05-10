@@ -19,6 +19,7 @@ export default function ModalComponent({ active, handleModalChange }) {
     try {
       let json;
       if (value !== "" && value !== undefined) {
+        console.log("a")
         const res = await fetch(`/api/products?name=${value}`)
         json = await res.json()
         setData(json.body.data.products.edges)
@@ -31,7 +32,7 @@ export default function ModalComponent({ active, handleModalChange }) {
       console.log(error)
     }
   }
-  const debounceDropDown = useCallback(debounce((nextValue) => fetchProducts(nextValue), 500), [])
+  const debounceDropDown = useCallback(debounce((nextValue) => fetchProducts(nextValue), 1000), [])
   useMemo(() => {
     debounceDropDown(queryValue)
   }, [queryValue])
