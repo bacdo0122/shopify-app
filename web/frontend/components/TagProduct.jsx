@@ -18,13 +18,16 @@ import { useDispatch, useSelector } from "react-redux";
 import ProductList from "./ProductList";
 import {CirclePlusMinor} from '@shopify/polaris-icons';
 import { setCollectionSelected } from "../reducers/collection";
+import { setTagSelected, setTags } from "../reducers/tag";
   
   function TagsProduct() {
     const tags = useSelector(state => state.tags.tags)
+    const tagsSelected = useSelector(state => state.tags.selected)
+
     const dispatch = useDispatch();
     const deselectedOptions = useMemo(
       () => tags && tags.map(item => ({title:item.node})),
-       [] 
+       [tags] 
     );
           
       const [selectedOptions, setSelectedOptions] = useState([]);
@@ -44,9 +47,10 @@ import { setCollectionSelected } from "../reducers/collection";
         const resultOptions = deselectedOptions.filter((option) =>
           option.title.match(filterRegex)
           );
-         
-         if(add){
+        //  console.log(resultOptions)
+         if(add){ 
           setOptions([...deselectedOptions, {title: value}]);
+          dispatch(setTags([...tags, {node: value}]))
          }
          else{
           setOptions(resultOptions);
@@ -71,6 +75,7 @@ import { setCollectionSelected } from "../reducers/collection";
               updateText("");
             }
             else{
+
               setSelectedOptions([...selectedOptions, {title: selected}]);
               updateText(selected, true);
             }
@@ -81,8 +86,17 @@ import { setCollectionSelected } from "../reducers/collection";
     );
   
       const handleActiveOptionChange = useCallback((activeOption)=>{
-        console.log(activeOption)
-      },[])
+        if (tagsSelected.find(selected => selected.node === activeOption)) {
+          const filter = tagsSelected.filter(item => item.node !== activeOption )
+          dispatch(setTagSelected([...filter]))
+          setSelectedOptions([...filter])
+        
+        } else {
+          dispatch(setTagSelected([...tagsSelected, {node: activeOption}]))
+          setSelectedOptions([...tagsSelected, {node: activeOption}])
+        }
+        setInputValue("")
+      },[tagsSelected])
 
       const actionMarkup = (inputValue && !options.find(item => item.title === inputValue)) ? <Listbox.Action  value={inputValue} icon={CirclePlusMinor}>
       {`Add ${inputValue}`}
@@ -105,19 +119,40 @@ import { setCollectionSelected } from "../reducers/collection";
             );
           })
         : null;
-  
+
+
+        const removeTag = useCallback(
+          (tag) => () => {
+            handleActiveOptionChange(tag);
+          },
+          [handleActiveOptionChange]
+        );
+
+        const verticalContentMarkup =
+        tagsSelected.length > 0 ? (
+          <LegacyStack spacing="extraTight" alignment="center">
+            {tagsSelected.map((tag) => (
+              <Tag key={`option-${tag.node}`} onRemove={removeTag(tag.node)}>
+                {tag.node}
+              </Tag>
+            ))}
+          </LegacyStack>
+        ) : null;
+
     return (
         <>
         <Combobox
           allowMultiple
           activator={
             <Combobox.TextField
-              onChange={updateText}
+              onChange={(value)=>updateText(value, false)}
               label="Search Tags"
               labelHidden
               value={inputValue}
               placeholder="Search Tags"
               autoComplete="off"
+              verticalContent={verticalContentMarkup}
+
             />
           }
         >
@@ -130,7 +165,7 @@ import { setCollectionSelected } from "../reducers/collection";
                         onActiveOptionChange={handleActiveOptionChange}
                       >
                         {actionMarkup}
-                        <Box role="combobox" padding={"2"} borderBlockEndWidth="1" borderColor="border">Suggest TAGS</Box>
+                        <Box role="combobox" padding={"2"} borderBlockEndWidth="1" borderColor="border">SUGGESTED TAGS</Box>
                         {optionsMarkup}
                       </Listbox>
                       </>

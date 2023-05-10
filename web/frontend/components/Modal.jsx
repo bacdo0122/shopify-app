@@ -4,6 +4,7 @@ import { useAuthenticatedFetch } from '../hooks/index';
 import { debounce } from 'lodash'
 import {useDispatch, useSelector} from 'react-redux'
 import { setProductSelected, setProducts } from '../reducers/product';
+import { json } from 'react-router-dom';
 export default function ModalComponent({ active, handleModalChange }) {
   const [queryValue, setQueryValue] = useState('');
   const [selectedItems, setSelectedItems] = useState([]);
@@ -20,10 +21,10 @@ export default function ModalComponent({ active, handleModalChange }) {
       if (value !== "" && value !== undefined) {
         const res = await fetch(`/api/products?name=${value}`)
         json = await res.json()
-        console.log(json.body.data.products.edges)
         setData(json.body.data.products.edges)
       }
       else {
+        console.log(products)
         setData(products)
       }
     } catch (error) {
@@ -53,14 +54,20 @@ export default function ModalComponent({ active, handleModalChange }) {
     [],
   );
 
-  const handleSaveProduct = useCallback(()=>{
-    dispatch(setProductSelected(selectedItems))
+  const handleSaveProduct = useCallback(async()=>{
+    try {
+      const res = await fetch(`/api/products?ids=${JSON.stringify(selectedItems)}`)
+      const json = await res.json()
+      dispatch(setProductSelected(json.body.data.nodes))
+    } catch (error) {
+      console.log(error)
+    }
     handleModalChange();
   },[selectedItems])
   //
 
   const filters = [];
-
+ 
   //
   return (
     <div style={{ height: '500px' }}>

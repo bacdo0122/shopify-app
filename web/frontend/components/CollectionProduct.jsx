@@ -65,18 +65,7 @@ import { setCollectionSelected } from "../reducers/collection";
       },
       [selectedOptions, updateText]
     );
-  
-    // const removeTag = useCallback(
-    //   (tag) => () => {
-    //     const options = [...selectedOptions];
-    //     options.splice(options.indexOf(tag), 1);
-    //     setSelectedOptions(options);
-    //   },
-    //   [selectedOptions]
-    // );
-  
 
-  
     const optionsMarkup =
       options.length > 0
         ? options.map((option) => {
@@ -119,7 +108,7 @@ import { setCollectionSelected } from "../reducers/collection";
             </Listbox>
           ) : null}
         </Combobox>
-        <ProductList type="collections" data={selectedOptions}/>
+        <ProductList type="collections" data={selectedOptions} action={updateSelection}/>
         </>
     );
   }

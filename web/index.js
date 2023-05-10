@@ -56,6 +56,22 @@ app.get("/api/products", async (_req, res) => {
            id
            title
            handle 
+           tags
+           collections(first: 5) {
+            edges {
+              node {
+                handle
+              }
+            }
+          }
+           variants(first: 1) {
+            edges {
+              node {
+                title
+                price
+              }
+            }
+          }
            images(first: 1) {
             edges {
               node {
@@ -64,6 +80,7 @@ app.get("/api/products", async (_req, res) => {
               }
             }
           }
+         
          }
        }
      }
@@ -71,27 +88,43 @@ app.get("/api/products", async (_req, res) => {
  });
  }
  else if(_req.query.ids){
-  const ids = JSON.parse(_req.query.ids.toString()).map(item => `"` + item + `"`)
     data = await client.query({ 
-    data: `query { 
+    data: `query {   
       nodes(ids:${_req.query.ids}) {   
         ... on Product {
-          id
-          title
-          handle 
-          images(first: 1) {
-           edges {
-             node {
-               id
-               src
-             }
-           }  
-         }
+           id
+           title
+           handle
+           tags
+           collections(first: 50) {
+            edges {
+              node {
+                handle
+                title
+              }
+            }
+          }
+           priceRange {
+            maxVariantPrice {
+              amount
+            }
+            minVariantPrice {
+              amount
+            }
+          }
+           
+           images(first: 1) {
+             edges {
+               node {
+                 id
+                 src
+                }
+              }
+            }
         }
       } 
     }`,  
   });  
-  res.status(200).send(data)
  }
  else{
   data = await client.query({
@@ -102,6 +135,24 @@ app.get("/api/products", async (_req, res) => {
            id
            title
            handle
+           tags
+           collections(first: 50) {
+            edges {
+              node {
+                handle
+                title
+              }
+            }
+          }
+           priceRange {
+            maxVariantPrice {
+              amount
+            }
+            minVariantPrice {
+              amount
+            }
+          }
+           
            images(first: 1) {
              edges {
                node {
@@ -110,6 +161,8 @@ app.get("/api/products", async (_req, res) => {
                 }
               }
             }
+           
+
           }
         }
      }
@@ -185,9 +238,8 @@ app.get("/api/tags", async(_req,res)=>{
         data: `
         query{
           shop{
-            productTags(first: 20){
+            productTags(first: 100){
               edges{
-                cursor
                 node
               }
             }
@@ -201,9 +253,8 @@ app.get("/api/tags", async(_req,res)=>{
         data: `
         query{
           shop{
-            productTags(first: 20){
+            productTags(first: 100){
               edges{
-                cursor
                 node
               }
             }

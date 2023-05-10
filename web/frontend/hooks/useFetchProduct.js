@@ -22,7 +22,7 @@ export default function UseFetchProduct() {
         if(data){
             dispatch(setProducts(data.body.data.products.edges))
         }
-    },[data])
+    },[])
   }
 
 
